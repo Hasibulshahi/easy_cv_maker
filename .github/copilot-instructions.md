@@ -1,0 +1,9 @@
+- [x] Verify that the copilot-instructions.md file in the .github directory is created.
+- [x] Clarify project requirements: React.js CV maker in current folder.
+- [x] Scaffold the project: Vite React project created in place.
+- [x] Customize the project: CV editor, preview, template switch, and print flow implemented.
+- [x] Install required extensions: none required.
+- [x] Compile the project: dependencies installed, build and lint passed.
+- [x] Create and run task: skipped (standard npm scripts already available).
+- [x] Launch the project: deferred to user command (npm run dev) to continue development.
+- [x] Ensure documentation is complete: README updated and checklist cleaned.

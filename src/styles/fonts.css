@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ── Font families ───────────────────────────── */
+  --font-head: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-body: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+
+  /* ── Font sizes — type scale ─────────────────── */
+  --fs-xs:    0.54rem;                       /* badge, tiny icon labels  */
+  --fs-sm:    0.61rem;                       /* form labels              */
+  --fs-sm2:   0.63rem;                       /* small buttons, icon text */
+  --fs-sm3:   0.65rem;                       /* secondary info           */
+  --fs-body:  0.68rem;                       /* contact, body copy       */
+  --fs-md:    0.72rem;                       /* personal detail list     */
+  --fs-md2:   0.74rem;                       /* section label uppercase  */
+  --fs-base:  0.79rem;                       /* default / neutral        */
+  --fs-base2: 0.81rem;                       /* item titles              */
+  --fs-lg:    1.03rem;                       /* sub-headings             */
+  --fs-xl:    1.17rem;                       /* responsive heading       */
+  --fs-xl2:   1.22rem;                       /* cv name heading          */
+  --fs-2xl:   1.44rem;                       /* section headings         */
+  --fs-3xl:   1.62rem;                       /* large initials / avatar  */
+  --fs-hero:  clamp(1.26rem, 2.34vw, 1.98rem); /* page hero title       */
+}
