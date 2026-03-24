@@ -23,3 +23,21 @@ npm run dev
 npm run build
 npm run preview
 ```
+
+## GitHub CI/CD
+
+This repo now includes a GitHub Actions workflow at [.github/workflows/deploy.yml](.github/workflows/deploy.yml) that:
+
+- runs `npm ci`
+- runs `npm run lint`
+- runs `npm run build`
+- deploys the `dist` output to GitHub Pages on every push to `main`
+
+To use auto-deployment:
+
+1. Push this repository to GitHub.
+2. In GitHub, open `Settings > Pages`.
+3. Set `Source` to `GitHub Actions`.
+4. Push to `main` and the site will build and deploy automatically.
+
+Pull requests will run the build checks, but they will not deploy.
