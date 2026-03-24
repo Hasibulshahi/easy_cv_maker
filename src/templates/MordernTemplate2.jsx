@@ -1,4 +1,13 @@
-function EuropassTemplate({ form, experiences, education, skillList }) {
+function MordernTemplate2({ form, experiences, education, skillList, languageList }) {
+  const toUrl = (value = '') => {
+    const trimmed = value.trim()
+    if (!trimmed) {
+      return ''
+    }
+
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  }
+
   const initials = (form.fullName || 'YN')
     .split(' ')
     .filter(Boolean)
@@ -7,16 +16,15 @@ function EuropassTemplate({ form, experiences, education, skillList }) {
     .join('')
 
   const personalItems = [
-    { icon: '👤', value: form.fullName },
     { icon: '✉', value: form.email },
     { icon: '☎', value: form.phone },
     { icon: '⌂', value: form.location },
-    { icon: '🌐', value: form.website },
-    { icon: 'in', value: form.linkedIn },
+    { icon: '🌐', value: form.website, text: 'Portfolio', href: toUrl(form.website || '') },
+    { icon: 'in', value: form.linkedIn, text: 'LinkedIn', href: toUrl(form.linkedIn || '') },
   ].filter((item) => item.value)
 
   return (
-    <div className="cv-preview europass">
+    <div className="cv-preview MordernTemplate2">
       <section className="eu-layout">
         <aside className="eu-side">
           <div className="eu-side-top">
@@ -38,7 +46,15 @@ function EuropassTemplate({ form, experiences, education, skillList }) {
               {personalItems.map((item, index) => (
                 <li key={`p-${index}`}>
                   <span className={`eu-icon ${item.icon === 'in' ? 'linkedin' : ''}`}>{item.icon}</span>
-                  <span>{item.value}</span>
+                  <span>
+                    {item.href ? (
+                      <a className="eu-link" href={item.href} target="_blank" rel="noreferrer noopener">
+                        {item.text}
+                      </a>
+                    ) : (
+                      item.value
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -55,12 +71,24 @@ function EuropassTemplate({ form, experiences, education, skillList }) {
               ))}
             </ul>
           </section>
+
+          <section className="eu-personal eu-skills-box eu-language-box">
+            <h3>Languages</h3>
+            <ul>
+              {languageList.map((language) => (
+                <li key={language}>
+                  <span className="eu-icon">•</span>
+                  <span>{language}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
         </aside>
 
         <div className="eu-main">
           <section className="eu-section">
             <h3>Profile</h3>
-            <p>{form.summary}</p>
+            <p className="eu-profile-text">{form.summary}</p>
           </section>
 
           <section className="eu-section">
@@ -88,11 +116,21 @@ function EuropassTemplate({ form, experiences, education, skillList }) {
                   <div className="eu-edu-head">
                     <strong>
                       <span className="eu-role">{item.role || 'Role'}</span>
-                      {item.company && <span className="eu-company-inline"> | {item.company}</span>}
+                      {item.company && <span className="eu-company-inline"> @ {item.company}</span>}
                     </strong>
                     <span>{item.period || 'Period'}</span>
                   </div>
-                  <p>{item.details}</p>
+                  <p className="eu-exp-details-text">{item.details}</p>
+                  {item.detailsUrl?.trim() && (
+                    <a
+                      className="eu-exp-details-link"
+                      href={toUrl(item.detailsUrl)}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      Details
+                    </a>
+                  )}
                 </article>
               ))}
           </section>
@@ -102,4 +140,4 @@ function EuropassTemplate({ form, experiences, education, skillList }) {
   )
 }
 
-export default EuropassTemplate
+export default MordernTemplate2

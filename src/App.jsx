@@ -3,7 +3,7 @@ import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import './App.css'
 import StandardTemplate from './templates/StandardTemplate'
-import EuropassTemplate from './templates/EuropassTemplate'
+import MordernTemplate2 from './templates/MordernTemplate2'
 
 const defaultData = {
   fullName: 'Alex Morgan',
@@ -17,6 +17,7 @@ const defaultData = {
   summary:
     'Designer focused on turning complex workflows into clear, human-centered products with measurable business impact.',
   skills: 'Figma, UX Research, Design Systems, Prototyping, Product Strategy',
+  languages: 'English, Spanish',
 }
 
 const emptyExperience = {
@@ -24,6 +25,7 @@ const emptyExperience = {
   company: '',
   period: '',
   details: '',
+  detailsUrl: '',
 }
 
 const emptyEducation = {
@@ -35,7 +37,7 @@ const emptyEducation = {
 const templateOptions = [
   { value: 'modern', label: 'Modern' },
   { value: 'classic', label: 'Classic' },
-  { value: 'europass', label: 'Europass' },
+  { value: 'modern2', label: 'Modern 2' },
 ]
 
 function App() {
@@ -49,6 +51,7 @@ function App() {
       period: '2022 - Present',
       details:
         'Led redesign of onboarding flow, improving trial-to-paid conversion by 18% and reducing support tickets by 23%.',
+      detailsUrl: '',
     },
     {
       role: 'Product Designer',
@@ -56,6 +59,7 @@ function App() {
       period: '2019 - 2022',
       details:
         'Built scalable component library and partnered with engineering to ship 30+ experiments across web and mobile.',
+      detailsUrl: '',
     },
   ])
   const [education, setEducation] = useState([
@@ -70,6 +74,11 @@ function App() {
   const skillList = useMemo(
     () => form.skills.split(',').map((skill) => skill.trim()).filter(Boolean),
     [form.skills],
+  )
+
+  const languageList = useMemo(
+    () => (form.languages || '').split(',').map((language) => language.trim()).filter(Boolean),
+    [form.languages],
   )
 
   const updateForm = (key, value) => {
@@ -122,6 +131,22 @@ function App() {
     try {
       setIsExporting(true)
 
+      const previewBounds = previewRef.current.getBoundingClientRect()
+      const anchorLinks = Array.from(previewRef.current.querySelectorAll('a[href]'))
+        .map((anchor) => {
+          const rect = anchor.getBoundingClientRect()
+          const href = anchor.href || ''
+
+          return {
+            href,
+            x: rect.left - previewBounds.left,
+            y: rect.top - previewBounds.top,
+            width: rect.width,
+            height: rect.height,
+          }
+        })
+        .filter((link) => link.width > 0 && link.height > 0 && /^https?:\/\//i.test(link.href))
+
       const canvas = await html2canvas(previewRef.current, {
         scale: 2,
         useCORS: true,
@@ -134,18 +159,44 @@ function App() {
       const pageHeight = pdf.internal.pageSize.getHeight()
       const imageWidth = pageWidth
       const imageHeight = (canvas.height * imageWidth) / canvas.width
+      const mmPerPx = imageWidth / previewBounds.width
+      const totalPages = Math.ceil(imageHeight / pageHeight)
 
-      let heightLeft = imageHeight
-      let yPosition = 0
+      for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
+        if (pageIndex > 0) {
+          pdf.addPage()
+        }
 
-      pdf.addImage(imageData, 'PNG', 0, yPosition, imageWidth, imageHeight, '', 'FAST')
-      heightLeft -= pageHeight
+        const imageOffsetY = -pageIndex * pageHeight
+        pdf.addImage(imageData, 'PNG', 0, imageOffsetY, imageWidth, imageHeight, '', 'FAST')
+      }
 
-      while (heightLeft > 0) {
-        yPosition = heightLeft - imageHeight
-        pdf.addPage()
-        pdf.addImage(imageData, 'PNG', 0, yPosition, imageWidth, imageHeight, '', 'FAST')
-        heightLeft -= pageHeight
+      for (const link of anchorLinks) {
+        const linkX = link.x * mmPerPx
+        const linkTop = link.y * mmPerPx
+        const linkHeight = link.height * mmPerPx
+        const linkWidth = link.width * mmPerPx
+        const linkBottom = linkTop + linkHeight
+
+        for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
+          const pageTop = pageIndex * pageHeight
+          const pageBottom = pageTop + pageHeight
+
+          if (linkBottom <= pageTop || linkTop >= pageBottom) {
+            continue
+          }
+
+          const visibleTop = Math.max(linkTop, pageTop)
+          const visibleBottom = Math.min(linkBottom, pageBottom)
+          const visibleHeight = visibleBottom - visibleTop
+
+          if (visibleHeight <= 0) {
+            continue
+          }
+
+          pdf.setPage(pageIndex + 1)
+          pdf.link(linkX, visibleTop - pageTop, linkWidth, visibleHeight, { url: link.href })
+        }
       }
 
       const safeName = (form.fullName || 'cv')
@@ -166,7 +217,7 @@ function App() {
   return (
     <main className="app-shell">
       <header className="hero">
-        <p className="badge">React CV Maker</p>
+        <p className="badge">Easy CV Maker</p>
         <h1>Build your CV in minutes</h1>
         <p className="subtitle">
           Fill in your details, choose a style, and print a clean one-page resume.
@@ -236,15 +287,7 @@ function App() {
               />
             </label>
             <label className="full-row">
-              Photo URL (for Europass)
-              <input
-                value={form.photoUrl || ''}
-                onChange={(e) => updateForm('photoUrl', e.target.value)}
-                placeholder="https://example.com/your-photo.jpg"
-              />
-            </label>
-            <label className="full-row">
-              Upload photo (for Europass)
+              Upload photo
               <input type="file" accept="image/*" onChange={handlePhotoUpload} />
             </label>
             <label className="full-row">
@@ -260,6 +303,13 @@ function App() {
               <input
                 value={form.skills}
                 onChange={(e) => updateForm('skills', e.target.value)}
+              />
+            </label>
+            <label className="full-row">
+              Languages (comma separated)
+              <input
+                value={form.languages || ''}
+                onChange={(e) => updateForm('languages', e.target.value)}
               />
             </label>
           </div>
@@ -294,11 +344,19 @@ function App() {
                 />
               </label>
               <label className="full-row">
-                Highlights
+                Highlights (one bullet per line)
                 <textarea
                   rows="3"
                   value={item.details}
                   onChange={(e) => updateExperience(index, 'details', e.target.value)}
+                />
+              </label>
+              <label className="full-row">
+                Details URL (optional)
+                <input
+                  value={item.detailsUrl || ''}
+                  onChange={(e) => updateExperience(index, 'detailsUrl', e.target.value)}
+                  placeholder="https://example.com/project-details"
                 />
               </label>
               <button type="button" className="delete" onClick={() => removeExperience(index)}>
@@ -352,12 +410,13 @@ function App() {
             <h2>Preview</h2>
           </div>
           <div className="preview-canvas" ref={previewRef}>
-            {template === 'europass' ? (
-              <EuropassTemplate
+            {template === 'modern2' ? (
+              <MordernTemplate2
                 form={form}
                 experiences={experiences}
                 education={education}
                 skillList={skillList}
+                languageList={languageList}
               />
             ) : (
               <StandardTemplate
@@ -365,6 +424,7 @@ function App() {
                 experiences={experiences}
                 education={education}
                 skillList={skillList}
+                languageList={languageList}
                 variant={template}
               />
             )}
