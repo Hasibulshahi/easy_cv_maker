@@ -4,12 +4,16 @@ import { jsPDF } from 'jspdf'
 import './App.css'
 import StandardTemplate from './templates/StandardTemplate'
 import MordernTemplate2 from './templates/MordernTemplate2'
+import EuropassClassicTemplate from './templates/EuropassClassicTemplate'
 
 const defaultData = {
   fullName: 'Alex Morgan',
   title: 'Product Designer',
   email: 'alex@example.com',
   phone: '+1 (555) 0142',
+  passportNumber: '',
+  nationality: '',
+  workPermit: '',
   location: 'San Francisco, CA',
   website: 'portfolio.example.com',
   linkedIn: 'linkedin.com/in/alex-morgan',
@@ -38,6 +42,7 @@ const templateOptions = [
   { value: 'modern', label: 'Modern' },
   { value: 'classic', label: 'Classic' },
   { value: 'modern2', label: 'Modern 2' },
+  { value: 'europass', label: 'Europass Classic' },
 ]
 
 function App() {
@@ -266,6 +271,27 @@ function App() {
               <input value={form.phone} onChange={(e) => updateForm('phone', e.target.value)} />
             </label>
             <label>
+              Passport number
+              <input
+                value={form.passportNumber || ''}
+                onChange={(e) => updateForm('passportNumber', e.target.value)}
+              />
+            </label>
+            <label>
+              Nationality
+              <input
+                value={form.nationality || ''}
+                onChange={(e) => updateForm('nationality', e.target.value)}
+              />
+            </label>
+            <label>
+              Work permit
+              <input
+                value={form.workPermit || ''}
+                onChange={(e) => updateForm('workPermit', e.target.value)}
+              />
+            </label>
+            <label>
               Location
               <input
                 value={form.location}
@@ -412,6 +438,14 @@ function App() {
           <div className="preview-canvas" ref={previewRef}>
             {template === 'modern2' ? (
               <MordernTemplate2
+                form={form}
+                experiences={experiences}
+                education={education}
+                skillList={skillList}
+                languageList={languageList}
+              />
+            ) : template === 'europass' ? (
+              <EuropassClassicTemplate
                 form={form}
                 experiences={experiences}
                 education={education}

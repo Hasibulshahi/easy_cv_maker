@@ -717,6 +717,217 @@ textarea:focus {
   }
 }
 
+/* ────────────────────────────────────────────────────────────────── */
+/* EUROPASS CLASSIC — Full-width, single-column, minimal design       */
+/* ────────────────────────────────────────────────────────────────── */
+
+/* Europass Classic - Official Format */
+.cv-preview.europass-classic {
+  background: #f3f3f5;
+  color: #000000;
+  max-width: 210mm;
+  padding: 4mm 2mm 20mm;
+  margin: 0 auto;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+
+/* Header with photo */
+.ec-header-with-photo {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  padding: 0.35rem 0 0.6rem;
+  page-break-inside: avoid;
+}
+
+.ec-header-photo {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #c8c8cc;
+}
+
+.ec-header-content {
+  flex: 1;
+}
+
+.ec-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.ec-name {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #000000;
+}
+
+.ec-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transform: translateY(-1px);
+}
+
+.ec-brand-flag {
+  width: 46px;
+  height: 30px;
+  display: block;
+  border-radius: 1px;
+  object-fit: cover;
+}
+
+.ec-brand-text {
+  color: #6e368f;
+  font-size: 1.35rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.ec-head-divider {
+  margin-top: 0.45rem;
+  border-top: 2px solid #8e8e93;
+}
+
+.ec-contact-lines {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ec-contact-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  row-gap: 0.2rem;
+}
+
+.ec-contact-item {
+  font-size: var(--fs-sm3);
+  color: #000000;
+}
+
+.ec-contact-item strong {
+  font-weight: 700;
+}
+
+.ec-contact-item + .ec-contact-item::before {
+  content: '|';
+  margin: 0 0.45rem;
+  color: #6c6c70;
+  font-weight: 400;
+}
+
+.ec-contact-item a {
+  color: #0f4ca7;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Sections */
+.ec-section {
+  margin-top: 1rem;
+  page-break-inside: avoid;
+}
+
+.ec-section-title {
+  margin: 0 0 0.5rem;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #000000;
+  border-bottom: 1px solid #000000;
+  padding-bottom: 0.3rem;
+}
+
+/* Work Experience */
+.ec-entries {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.ec-entry {
+  page-break-inside: avoid;
+}
+
+.ec-entry-title {
+  margin: 0 0 0.2rem;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: #000000;
+}
+
+.ec-entry-meta {
+  margin: 0 0 0.3rem;
+  font-size: var(--fs-sm3);
+  color: #333333;
+}
+
+.ec-entry-description {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: #1a1a1a;
+  line-height: 1.5;
+  text-align: justify;
+}
+
+.ec-entry-link {
+  display: inline-block;
+  margin-top: 0.2rem;
+  font-size: var(--fs-sm3);
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .ec-head-row {
+    align-items: center;
+  }
+
+  .ec-brand-text {
+    font-size: 1.2rem;
+  }
+
+  .ec-contact-item {
+    font-size: var(--fs-sm2);
+  }
+}
+
+/* Language Skills */
+.ec-language-content {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.ec-language-intro {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: #1a1a1a;
+  line-height: 1.5;
+}
+
+/* Skills */
+.ec-skills-list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ec-skill-item {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: #1a1a1a;
+  line-height: 1.5;
+}
+
 @media print {
   body {
     background: #ffffff;
