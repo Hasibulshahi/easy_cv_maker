@@ -5,7 +5,7 @@
 }
 
 .hero {
-  margin-bottom: 1.4rem;
+  margin-bottom: 0.5rem;
 }
 
 .badge {
@@ -95,7 +95,7 @@
 }
 
 .panel-head {
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
 }
 
 .panel-head h2,
@@ -726,11 +726,16 @@ textarea:focus {
   background: #f3f3f5;
   color: #000000;
   max-width: 210mm;
-  padding: 4mm 2mm 20mm;
+  padding: 2mm 2mm 5mm;
   margin: 0 auto;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: var(--fs-body);
   line-height: 1.5;
+}
+
+.cv-preview.europass-classic h1,
+.cv-preview.europass-classic h2 {
+  text-transform: uppercase;
 }
 
 /* Header with photo */
@@ -859,11 +864,45 @@ textarea:focus {
   page-break-inside: avoid;
 }
 
+.ec-entry-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
 .ec-entry-title {
   margin: 0 0 0.2rem;
   font-size: var(--fs-base);
   font-weight: 700;
   color: #000000;
+}
+
+.ec-exp-title {
+  text-transform: uppercase;
+}
+
+.ec-exp-entry {
+  position: relative;
+  padding-bottom: 0.2rem;
+}
+
+.ec-exp-entry:not(:last-child)::after {
+  content: '';
+  display: block;
+  width: 50%;
+  border-top: 1px solid #b7b7bb;
+  margin-top: 0.2rem;
+}
+
+.ec-entry-school {
+  font-weight: 400;
+}
+
+.ec-entry-period {
+  white-space: nowrap;
+  font-size: var(--fs-sm3);
+  color: #333333;
 }
 
 .ec-entry-meta {
@@ -899,6 +938,15 @@ textarea:focus {
 
   .ec-contact-item {
     font-size: var(--fs-sm2);
+  }
+
+  .ec-entry-head {
+    flex-wrap: wrap;
+  }
+
+  .ec-entry-period {
+    width: 100%;
+    text-align: left;
   }
 }
 

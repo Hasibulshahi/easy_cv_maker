@@ -98,19 +98,17 @@ function EuropassClassicTemplate({ form, experiences, education, skillList, lang
             {experiences
               .filter((item) => item.role || item.company)
               .map((item, index) => (
-                <div key={`exp-${index}`} className="ec-entry">
-                  <div className="ec-entry-title">
-                    <strong>
-                      {item.role || 'Position'}
-                      {item.company && ` – ${item.company}`}
-                    </strong>
-                  </div>
-                  {item.period && (
-                    <div className="ec-entry-meta">
-                      {item.period}
-                      {item.location && ` - ${item.location}`}
+                <div key={`exp-${index}`} className="ec-entry ec-exp-entry">
+                  <div className="ec-entry-head">
+                    <div className="ec-entry-title ec-exp-title">
+                      <strong>
+                        {item.role || 'Position'}
+                        {item.company && ` – ${item.company}`}
+                      </strong>
                     </div>
-                  )}
+                    {item.period && <div className="ec-entry-period">{item.period}</div>}
+                  </div>
+                  {item.location && <div className="ec-entry-meta">{item.location}</div>}
                   {item.details && (
                     <div className="ec-entry-description">
                       {boldText(item.details)}
@@ -144,13 +142,17 @@ function EuropassClassicTemplate({ form, experiences, education, skillList, lang
               .filter((item) => item.school || item.degree)
               .map((item, index) => (
                 <div key={`edu-${index}`} className="ec-entry">
-                  {item.period && (
-                    <div className="ec-entry-meta" style={{ marginBottom: '0.2rem' }}>
-                      {item.period}
+                  <div className="ec-entry-head">
+                    <div className="ec-entry-title">
+                      <strong>{(item.degree || 'Degree').toUpperCase()}</strong>
+                      {item.school && (
+                        <span className="ec-entry-school">
+                          {' '}
+                          from <strong>{item.school}</strong>
+                        </span>
+                      )}
                     </div>
-                  )}
-                  <div className="ec-entry-title">
-                    <strong>{item.degree || 'Degree'}</strong> {item.school && item.school}
+                    {item.period && <div className="ec-entry-period">{item.period}</div>}
                   </div>
                 </div>
               ))}
@@ -164,13 +166,14 @@ function EuropassClassicTemplate({ form, experiences, education, skillList, lang
           <h2 className="ec-section-title">▪ LANGUAGE SKILLS</h2>
           <div className="ec-language-content">
             <p className="ec-language-intro">
-              Mother tongue(s): <strong>{languageList[0] || 'Not specified'}</strong>
+              Mother tounge: <strong>{languageList[0] || 'Not specified'}</strong>
+              {languageList.length > 1 && (
+                <>
+                  {' '}
+                  | Other languages: {languageList.slice(1).join(', ')}
+                </>
+              )}
             </p>
-            {languageList.length > 1 && (
-              <p className="ec-language-intro">
-                Other language(s): {languageList.slice(1).join(', ')}
-              </p>
-            )}
           </div>
         </section>
       )}
