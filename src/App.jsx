@@ -201,6 +201,46 @@ function App() {
         cursorY += 5
       }
 
+      const writeLeftRightLine = (leftText, rightText, options = {}) => {
+        const {
+          size = 10.5,
+          style = 'bold',
+          color = [20, 20, 20],
+          gapAfter = 0.8,
+          lineGap = 4.8,
+          rightGap = 2,
+        } = options
+
+        const left = stripFormattingMarkers(leftText || '').trim()
+        const right = stripFormattingMarkers(rightText || '').trim()
+
+        if (!left && !right) {
+          return
+        }
+
+        pdf.setFont('helvetica', style)
+        pdf.setFontSize(size)
+        pdf.setTextColor(...color)
+
+        const rightWidth = right ? pdf.getTextWidth(right) + rightGap : 0
+        const maxLeftWidth = Math.max(30, contentWidth - rightWidth)
+        const leftLines = left ? pdf.splitTextToSize(left, maxLeftWidth) : ['']
+
+        leftLines.forEach((line, index) => {
+          ensureSpace(lineGap)
+          pdf.text(line, margin, cursorY)
+
+          if (index === 0 && right) {
+            const rightX = pageWidth - margin - pdf.getTextWidth(right)
+            pdf.text(right, rightX, cursorY)
+          }
+
+          cursorY += lineGap
+        })
+
+        cursorY += gapAfter
+      }
+
       const writeLabelValueLine = (label, value, options = {}) => {
         if (!value?.trim()) {
           return
@@ -208,6 +248,26 @@ function App() {
 
         const fullText = `${label}: ${value.trim()}`
         writeWrappedText(fullText, options)
+      }
+
+      const writeLabelWithLink = (label, rawValue) => {
+        const url = toExternalUrl(rawValue || '')
+        if (!url) {
+          return
+        }
+
+        ensureSpace(4.8)
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(9.5)
+        pdf.setTextColor(45, 45, 45)
+
+        const labelText = `${label}: `
+        pdf.text(labelText, margin, cursorY)
+
+        const linkX = margin + pdf.getTextWidth(labelText)
+        pdf.setTextColor(20, 70, 160)
+        pdf.textWithLink(url, linkX, cursorY, { url })
+        cursorY += 5
       }
 
       pdf.setFont('helvetica', 'bold')
@@ -224,6 +284,10 @@ function App() {
         cursorY += 6
       }
 
+      pdf.setDrawColor(140, 140, 140)
+      pdf.line(margin, cursorY - 1.2, pageWidth - margin, cursorY - 1.2)
+      cursorY += 1.5
+
       const contactLines = [
         [form.email?.trim(), form.phone?.trim(), form.location?.trim()].filter(Boolean).join(' | '),
         [
@@ -233,13 +297,14 @@ function App() {
         ]
           .filter(Boolean)
           .join(' | '),
-        form.website?.trim() && `Portfolio: ${toExternalUrl(form.website)}`,
-        form.linkedIn?.trim() && `LinkedIn: ${toExternalUrl(form.linkedIn)}`,
       ].filter(Boolean)
 
       contactLines.forEach((line) => {
         writeWrappedText(line, { size: 9.5, color: [45, 45, 45], gapAfter: 0.6, lineGap: 4.4 })
       })
+
+      writeLabelWithLink('Portfolio', form.website)
+      writeLabelWithLink('LinkedIn', form.linkedIn)
 
       cursorY += 2
 
@@ -255,13 +320,9 @@ function App() {
       if (populatedExperiences.length > 0) {
         writeSectionTitle('Work Experience')
 
-        populatedExperiences.forEach((item) => {
+        populatedExperiences.forEach((item, index) => {
           const roleCompany = [item.role?.trim(), item.company?.trim()].filter(Boolean).join(' - ')
-          const headerParts = [roleCompany, item.period?.trim()].filter(Boolean)
-
-          if (headerParts.length > 0) {
-            writeWrappedText(headerParts.join(' | '), { size: 10.5, style: 'bold', gapAfter: 0.8 })
-          }
+          writeLeftRightLine(roleCompany, item.period?.trim(), { size: 10.5, style: 'bold', gapAfter: 0.8 })
 
           if (item.location?.trim()) {
             writeWrappedText(item.location, { size: 9.5, color: [70, 70, 70], gapAfter: 0.6 })
@@ -281,6 +342,15 @@ function App() {
             color: [45, 45, 45],
             gapAfter: 2.2,
           })
+
+          if (index < populatedExperiences.length - 1) {
+            ensureSpace(3)
+            const dividerStart = margin + contentWidth * 0.25
+            const dividerEnd = margin + contentWidth * 0.75
+            pdf.setDrawColor(185, 185, 185)
+            pdf.line(dividerStart, cursorY - 0.5, dividerEnd, cursorY - 0.5)
+            cursorY += 2.2
+          }
         })
       }
 
@@ -294,13 +364,7 @@ function App() {
             .filter(Boolean)
             .join(' ')
 
-          if (degreeLine) {
-            writeWrappedText(degreeLine, { size: 10.5, style: 'bold', gapAfter: 0.8 })
-          }
-
-          if (item.period?.trim()) {
-            writeWrappedText(item.period, { size: 9.5, color: [70, 70, 70], gapAfter: 2.2 })
-          }
+          writeLeftRightLine(degreeLine, item.period?.trim(), { size: 10.5, style: 'bold', gapAfter: 2.2 })
         })
       }
 
