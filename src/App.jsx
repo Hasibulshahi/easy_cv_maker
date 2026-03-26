@@ -1,10 +1,20 @@
-import { useMemo, useRef, useState } from 'react'
-import html2canvas from 'html2canvas'
+import { useMemo, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import './App.css'
 import StandardTemplate from './templates/StandardTemplate'
 import MordernTemplate2 from './templates/MordernTemplate2'
 import EuropassClassicTemplate from './templates/EuropassClassicTemplate'
+
+const toExternalUrl = (value = '') => {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return ''
+  }
+
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+}
+
+const stripFormattingMarkers = (value = '') => value.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\r/g, '')
 
 const defaultData = {
   fullName: 'Alex Morgan',
@@ -74,8 +84,6 @@ function App() {
       period: '2015 - 2019',
     },
   ])
-  const previewRef = useRef(null)
-
   const skillList = useMemo(
     () => form.skills.split(',').map((skill) => skill.trim()).filter(Boolean),
     [form.skills],
@@ -129,79 +137,185 @@ function App() {
   }
 
   const handleDownloadPdf = async () => {
-    if (!previewRef.current || isExporting) {
+    if (isExporting) {
       return
     }
 
     try {
       setIsExporting(true)
-
-      const previewBounds = previewRef.current.getBoundingClientRect()
-      const anchorLinks = Array.from(previewRef.current.querySelectorAll('a[href]'))
-        .map((anchor) => {
-          const rect = anchor.getBoundingClientRect()
-          const href = anchor.href || ''
-
-          return {
-            href,
-            x: rect.left - previewBounds.left,
-            y: rect.top - previewBounds.top,
-            width: rect.width,
-            height: rect.height,
-          }
-        })
-        .filter((link) => link.width > 0 && link.height > 0 && /^https?:\/\//i.test(link.href))
-
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      })
-
-      const imageData = canvas.toDataURL('image/png')
       const pdf = new jsPDF('p', 'mm', 'a4')
       const pageWidth = pdf.internal.pageSize.getWidth()
       const pageHeight = pdf.internal.pageSize.getHeight()
-      const imageWidth = pageWidth
-      const imageHeight = (canvas.height * imageWidth) / canvas.width
-      const mmPerPx = imageWidth / previewBounds.width
-      const totalPages = Math.ceil(imageHeight / pageHeight)
+      const margin = 14
+      const contentWidth = pageWidth - margin * 2
+      const bottomLimit = pageHeight - 14
+      let cursorY = 18
 
-      for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
-        if (pageIndex > 0) {
-          pdf.addPage()
+      const ensureSpace = (height = 6) => {
+        if (cursorY + height <= bottomLimit) {
+          return
         }
 
-        const imageOffsetY = -pageIndex * pageHeight
-        pdf.addImage(imageData, 'PNG', 0, imageOffsetY, imageWidth, imageHeight, '', 'FAST')
+        pdf.addPage()
+        cursorY = 18
       }
 
-      for (const link of anchorLinks) {
-        const linkX = link.x * mmPerPx
-        const linkTop = link.y * mmPerPx
-        const linkHeight = link.height * mmPerPx
-        const linkWidth = link.width * mmPerPx
-        const linkBottom = linkTop + linkHeight
+      const writeWrappedText = (text, options = {}) => {
+        const {
+          size = 10,
+          style = 'normal',
+          color = [20, 20, 20],
+          indent = 0,
+          gapAfter = 1.5,
+          lineGap = 4.8,
+        } = options
 
-        for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
-          const pageTop = pageIndex * pageHeight
-          const pageBottom = pageTop + pageHeight
-
-          if (linkBottom <= pageTop || linkTop >= pageBottom) {
-            continue
-          }
-
-          const visibleTop = Math.max(linkTop, pageTop)
-          const visibleBottom = Math.min(linkBottom, pageBottom)
-          const visibleHeight = visibleBottom - visibleTop
-
-          if (visibleHeight <= 0) {
-            continue
-          }
-
-          pdf.setPage(pageIndex + 1)
-          pdf.link(linkX, visibleTop - pageTop, linkWidth, visibleHeight, { url: link.href })
+        const normalizedText = stripFormattingMarkers(text).trim()
+        if (!normalizedText) {
+          return
         }
+
+        pdf.setFont('helvetica', style)
+        pdf.setFontSize(size)
+        pdf.setTextColor(...color)
+
+        const lines = pdf.splitTextToSize(normalizedText, contentWidth - indent)
+        lines.forEach((line) => {
+          ensureSpace(lineGap)
+          pdf.text(line, margin + indent, cursorY)
+          cursorY += lineGap
+        })
+
+        cursorY += gapAfter
+      }
+
+      const writeSectionTitle = (title) => {
+        ensureSpace(8)
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(11)
+        pdf.setTextColor(0, 0, 0)
+        pdf.text(title.toUpperCase(), margin, cursorY)
+        cursorY += 2
+        pdf.setDrawColor(0, 0, 0)
+        pdf.line(margin, cursorY, pageWidth - margin, cursorY)
+        cursorY += 5
+      }
+
+      const writeLabelValueLine = (label, value, options = {}) => {
+        if (!value?.trim()) {
+          return
+        }
+
+        const fullText = `${label}: ${value.trim()}`
+        writeWrappedText(fullText, options)
+      }
+
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(18)
+      pdf.setTextColor(0, 0, 0)
+      pdf.text((form.fullName || 'Your Name').toUpperCase(), margin, cursorY)
+      cursorY += 7
+
+      if (form.title?.trim()) {
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(11)
+        pdf.setTextColor(60, 60, 60)
+        pdf.text(form.title.trim(), margin, cursorY)
+        cursorY += 6
+      }
+
+      const contactLines = [
+        [form.email?.trim(), form.phone?.trim(), form.location?.trim()].filter(Boolean).join(' | '),
+        [
+          form.passportNumber?.trim() && `Passport: ${form.passportNumber.trim()}`,
+          form.nationality?.trim() && `Nationality: ${form.nationality.trim()}`,
+          form.workPermit?.trim() && `Work permit: ${form.workPermit.trim()}`,
+        ]
+          .filter(Boolean)
+          .join(' | '),
+        form.website?.trim() && `Portfolio: ${toExternalUrl(form.website)}`,
+        form.linkedIn?.trim() && `LinkedIn: ${toExternalUrl(form.linkedIn)}`,
+      ].filter(Boolean)
+
+      contactLines.forEach((line) => {
+        writeWrappedText(line, { size: 9.5, color: [45, 45, 45], gapAfter: 0.6, lineGap: 4.4 })
+      })
+
+      cursorY += 2
+
+      if (form.summary?.trim()) {
+        writeSectionTitle('Professional Summary')
+        writeWrappedText(form.summary, { size: 10, gapAfter: 3 })
+      }
+
+      const populatedExperiences = experiences.filter(
+        (item) => item.role || item.company || item.period || item.details,
+      )
+
+      if (populatedExperiences.length > 0) {
+        writeSectionTitle('Work Experience')
+
+        populatedExperiences.forEach((item) => {
+          const roleCompany = [item.role?.trim(), item.company?.trim()].filter(Boolean).join(' - ')
+          const headerParts = [roleCompany, item.period?.trim()].filter(Boolean)
+
+          if (headerParts.length > 0) {
+            writeWrappedText(headerParts.join(' | '), { size: 10.5, style: 'bold', gapAfter: 0.8 })
+          }
+
+          if (item.location?.trim()) {
+            writeWrappedText(item.location, { size: 9.5, color: [70, 70, 70], gapAfter: 0.6 })
+          }
+
+          const detailLines = stripFormattingMarkers(item.details || '')
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean)
+
+          detailLines.forEach((line) => {
+            writeWrappedText(`- ${line}`, { size: 10, indent: 2, gapAfter: 0.6 })
+          })
+
+          writeLabelValueLine('Details', toExternalUrl(item.detailsUrl || ''), {
+            size: 9.5,
+            color: [45, 45, 45],
+            gapAfter: 2.2,
+          })
+        })
+      }
+
+      const populatedEducation = education.filter((item) => item.school || item.degree || item.period)
+
+      if (populatedEducation.length > 0) {
+        writeSectionTitle('Education')
+
+        populatedEducation.forEach((item) => {
+          const degreeLine = [item.degree?.trim(), item.school?.trim() && `from ${item.school.trim()}`]
+            .filter(Boolean)
+            .join(' ')
+
+          if (degreeLine) {
+            writeWrappedText(degreeLine, { size: 10.5, style: 'bold', gapAfter: 0.8 })
+          }
+
+          if (item.period?.trim()) {
+            writeWrappedText(item.period, { size: 9.5, color: [70, 70, 70], gapAfter: 2.2 })
+          }
+        })
+      }
+
+      if (skillList.length > 0) {
+        writeSectionTitle('Skills')
+        writeWrappedText(skillList.join(', '), { size: 10, gapAfter: 3 })
+      }
+
+      if (languageList.length > 0) {
+        writeSectionTitle('Languages')
+        const otherLanguages = languageList.slice(1).join(', ')
+        const languageLine = otherLanguages
+          ? `Mother tongue: ${languageList[0]} | Other languages: ${otherLanguages}`
+          : `Mother tongue: ${languageList[0]}`
+        writeWrappedText(languageLine, { size: 10, gapAfter: 2 })
       }
 
       const safeName = (form.fullName || 'cv')
@@ -435,7 +549,7 @@ function App() {
           <div className="preview-head">
             <h2>Preview</h2>
           </div>
-          <div className="preview-canvas" ref={previewRef}>
+          <div className="preview-canvas">
             {template === 'modern2' ? (
               <MordernTemplate2
                 form={form}
