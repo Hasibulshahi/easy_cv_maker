@@ -38,6 +38,7 @@
 }
 
 .workspace {
+  --panel-height: clamp(620px, calc(100vh - 165px), 860px);
   display: grid;
   grid-template-columns: minmax(340px, 460px) minmax(0, 1fr);
   gap: 1rem;
@@ -47,6 +48,7 @@
 
 .editor,
 .preview-wrap {
+  height: var(--panel-height);
   border: 1px solid var(--c-border);
   border-radius: 18px;
   backdrop-filter: blur(5px);
@@ -57,13 +59,12 @@
 .editor {
   padding: 1rem;
   overflow-y: auto;
-  max-height: clamp(620px, calc(100vh - 165px), 860px);
 }
 
 .preview-wrap {
   display: grid;
   grid-template-rows: auto 1fr;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .preview-head {
@@ -83,7 +84,7 @@
 
 .preview-canvas {
   padding: 1rem;
-  overflow: visible;
+  overflow-y: auto;
 }
 
 .panel-head,
@@ -115,7 +116,8 @@
 
 .ghost,
 .delete,
-.print-btn {
+.print-btn,
+.ats-btn {
   border: 0;
   cursor: pointer;
   font: inherit;
@@ -219,6 +221,60 @@ textarea:focus {
   background: linear-gradient(120deg, var(--c-accent), var(--c-accent-2));
   color: #ffffff;
   font-weight: 700;
+}
+
+.ats-btn {
+  width: 100%;
+  margin-top: 0.55rem;
+  border-radius: 12px;
+  padding: 0.72rem;
+  background: color-mix(in oklab, var(--c-accent) 14%, transparent);
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
+.ats-results {
+  margin-top: 1rem;
+  border: 1px solid color-mix(in oklab, var(--c-accent) 35%, var(--c-border));
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: color-mix(in oklab, var(--c-accent) 8%, transparent);
+}
+
+.ats-results h3,
+.ats-results h4 {
+  margin: 0;
+  font-family: var(--font-head);
+  color: var(--c-ink);
+}
+
+.ats-results h4 {
+  margin-top: 0.55rem;
+  font-size: var(--fs-sm);
+}
+
+.ats-score,
+.ats-all-matched {
+  margin: 0.4rem 0 0;
+  font-size: var(--fs-sm);
+  color: color-mix(in oklab, var(--c-ink) 75%, transparent);
+}
+
+.ats-source {
+  margin: 0.35rem 0 0;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--c-ink) 62%, transparent);
+}
+
+.ats-missing-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.2rem;
+  font-size: var(--fs-sm3);
+  color: color-mix(in oklab, var(--c-ink) 82%, transparent);
 }
 
 .cv-preview {
@@ -684,7 +740,12 @@ textarea:focus {
 
   .editor,
   .preview-wrap {
+    height: auto;
     max-height: none;
+    overflow: visible;
+  }
+
+  .preview-canvas {
     overflow: visible;
   }
 

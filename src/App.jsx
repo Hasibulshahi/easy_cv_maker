@@ -19,6 +19,8 @@ const stripFormattingMarkers = (value = '') => value.replace(/\*\*(.+?)\*\*/g, '
 const defaultData = {
   fullName: 'Alex Morgan',
   title: 'Product Designer',
+  targetDesignation: '',
+  targetJobDescription: '',
   email: 'alex@example.com',
   phone: '+1 (555) 0142',
   passportNumber: '',
@@ -55,10 +57,45 @@ const templateOptions = [
   { value: 'europass', label: 'Europass Classic' },
 ]
 
+const atsKeywords = [
+  'project management',
+  'stakeholder management',
+  'cross-functional collaboration',
+  'process improvement',
+  'data analysis',
+  'reporting and documentation',
+  'problem solving',
+  'communication',
+  'time management',
+  'leadership',
+  'teamwork',
+  'adaptability',
+  'agile',
+  'scrum',
+  'jira',
+  'kpi tracking',
+  'strategic planning',
+  'quality assurance',
+  'customer satisfaction',
+  'react.js',
+  'javascript',
+  'typescript',
+  'node.js',
+  'rest apis',
+  'git',
+  'ci/cd',
+  'unit testing',
+  'debugging',
+  'frontend development',
+  'responsive design',
+  'performance optimization',
+]
+
 function App() {
   const [form, setForm] = useState(defaultData)
   const [template, setTemplate] = useState('modern')
   const [isExporting, setIsExporting] = useState(false)
+  const [atsResult, setAtsResult] = useState(null)
   const [experiences, setExperiences] = useState([
     {
       role: 'Senior Product Designer',
@@ -397,6 +434,64 @@ function App() {
     }
   }
 
+  const handleCheckAtsKeywords = () => {
+    const normalizeText = (value = '') =>
+      value
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+    const cvText = normalizeText(
+      [
+        form.fullName,
+        form.title,
+        form.summary,
+        form.skills,
+        form.languages,
+        form.location,
+        form.website,
+        form.linkedIn,
+        experiences.map((item) => `${item.role} ${item.company} ${item.details}`).join(' '),
+        education.map((item) => `${item.school} ${item.degree}`).join(' '),
+      ]
+        .filter(Boolean)
+        .join(' '),
+    )
+
+    const targetText = normalizeText(
+      [form.targetDesignation, form.targetJobDescription].filter(Boolean).join(' '),
+    )
+
+    const targetKeywords = targetText
+      ? atsKeywords.filter((keyword) => targetText.includes(keyword))
+      : []
+
+    const keywordsToCheck = targetKeywords.length > 0 ? targetKeywords : atsKeywords
+
+    const matchedKeywords = keywordsToCheck.filter((keyword) => cvText.includes(keyword))
+    const missingKeywords = keywordsToCheck.filter((keyword) => !cvText.includes(keyword))
+    const score = Math.round((matchedKeywords.length / keywordsToCheck.length) * 100)
+
+    setAtsResult({
+      score,
+      matchedCount: matchedKeywords.length,
+      totalCount: keywordsToCheck.length,
+      missingKeywords,
+      source:
+        targetKeywords.length > 0
+          ? 'Job-specific keywords from designation and job description'
+          : 'Default ATS keyword checklist',
+    })
+
+    console.group('ATS Keyword Check')
+    console.log('Keyword source:', targetKeywords.length > 0 ? 'Job-specific' : 'Default checklist')
+    console.log('Match score:', `${score}% (${matchedKeywords.length}/${keywordsToCheck.length})`)
+    console.log('Missing keywords:', missingKeywords)
+    console.log('Matched keywords:', matchedKeywords)
+    console.groupEnd()
+  }
+
   return (
     <main className="app-shell">
       <header className="hero">
@@ -439,6 +534,14 @@ function App() {
             <label>
               Professional title
               <input value={form.title} onChange={(e) => updateForm('title', e.target.value)} />
+            </label>
+            <label className="full-row">
+              Target designation (for ATS check)
+              <input
+                value={form.targetDesignation || ''}
+                onChange={(e) => updateForm('targetDesignation', e.target.value)}
+                placeholder="e.g. Frontend Developer"
+              />
             </label>
             <label>
               Email
@@ -500,6 +603,15 @@ function App() {
                 rows="4"
                 value={form.summary}
                 onChange={(e) => updateForm('summary', e.target.value)}
+              />
+            </label>
+            <label className="full-row">
+              Target job description (for ATS check)
+              <textarea
+                rows="5"
+                value={form.targetJobDescription || ''}
+                onChange={(e) => updateForm('targetJobDescription', e.target.value)}
+                placeholder="Paste the job description here to evaluate missing ATS keywords."
               />
             </label>
             <label className="full-row">
@@ -607,6 +719,9 @@ function App() {
           <button type="button" className="print-btn" onClick={handleDownloadPdf}>
             {isExporting ? 'Generating PDF...' : 'Print / Save as PDF'}
           </button>
+          <button type="button" className="ats-btn" onClick={handleCheckAtsKeywords}>
+            Check ATS friendly Keywords
+          </button>
         </aside>
 
         <section className="preview-wrap">
@@ -643,6 +758,26 @@ function App() {
           </div>
         </section>
       </section>
+
+      {atsResult ? (
+        <section className="ats-results" aria-live="polite">
+          <h3>ATS Matching</h3>
+          <p className="ats-source">{atsResult.source}</p>
+          <p className="ats-score">
+            Score: {atsResult.score}% ({atsResult.matchedCount}/{atsResult.totalCount})
+          </p>
+          <h4>Missing Keywords</h4>
+          {atsResult.missingKeywords.length > 0 ? (
+            <ul className="ats-missing-list">
+              {atsResult.missingKeywords.map((keyword) => (
+                <li key={keyword}>{keyword}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="ats-all-matched">Great job. No missing keywords from this checklist.</p>
+          )}
+        </section>
+      ) : null}
     </main>
   )
 }
